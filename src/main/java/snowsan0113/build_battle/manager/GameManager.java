@@ -60,8 +60,14 @@ public class GameManager {
                             ChatUtil.sendGlobalMessage("ゲーム開始!");
                             build_player_list.addAll(Bukkit.getOnlinePlayers());
                             nextGame();
-                            ScoreboardManager.setScoreboard(GameStatus.RUNNING);
                             status = GameStatus.RUNNING;
+                            for (Player online : Bukkit.getOnlinePlayers()) {
+                                try {
+                                    ScoreboardManager.getInstance(online.getUniqueId()).setScoreboard();
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
                         }
                         else {
                             String format = String.format("ゲーム開始まであと%d秒", count_time);
