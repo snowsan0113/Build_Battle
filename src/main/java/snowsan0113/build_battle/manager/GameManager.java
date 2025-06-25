@@ -38,7 +38,7 @@ public class GameManager {
 
     private GameManager() throws IOException {
         this.count_time = 10;
-        this.build_time = 60*5;
+        this.build_time = 10;
         this.build_player_list = new ArrayList<>();
         this.build_list = new ArrayList<>(BuildManager.getInstance().getBuildList());
         this.status = GameStatus.WAIITNG;
@@ -53,7 +53,11 @@ public class GameManager {
                         if (count_time == 0) {
                             ChatUtil.sendGlobalMessage("ゲーム開始!");
                             build_player_list.addAll(Bukkit.getOnlinePlayers());
-                            nextGame();
+                            try {
+                                nextGame();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                             status = GameStatus.RUNNING;
                             for (Player online : Bukkit.getOnlinePlayers()) {
                                 try {
@@ -90,7 +94,11 @@ public class GameManager {
                         }
 
                         if (build_time == 0) {
-                            nextGame();
+                            try {
+                                nextGame();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }
 
                         build_time--;
@@ -105,26 +113,40 @@ public class GameManager {
         }
     }
 
-    public void resetGame() {
-
+    public void resetGame(boolean board_reset) throws IOException {
+        status = GameStatus.WAIITNG;
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            ScoreboardManager board = ScoreboardManager.getInstance(online.getUniqueId());
+            if (board_reset) board.setScoreboard();
+        }
+        task.cancel();
     }
 
-    public void nextGame() {
+    public void nextGame() throws IOException {
         //建築する人を選ぶ
-        Collections.shuffle(build_player_list);
-        build_player = build_player_list.get(0);
-        build_player_list.remove(build_player);
+        if (build_player_list.isEmpty()) {
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                ScoreboardManager board = ScoreboardManager.getInstance(online.getUniqueId());
+                board.setScoreboard();
+            }
+            ChatUtil.sendGlobalMessage("ゲーム終了!");
+            resetGame(false);
+        }
+        else {
+            Collections.shuffle(build_player_list);
+            build_player = build_player_list.get(0);
+            build_player_list.remove(build_player);
 
-        //建築物を選ぶ
-        Collections.shuffle(build_list);
-        now_build = build_list.get(0);
-        build_list.remove(now_build);
+            //建築物を選ぶ
+            Collections.shuffle(build_list);
+            now_build = build_list.get(0);
+            build_list.remove(now_build);
 
-        ChatUtil.sendMessage(build_player.getPlayer(), "==============" + "\n" +
-                "あなたが建築する人に選ばれました。 次のものを建築してください。\n" +
-                "・" + now_build.name() + "\n" +
-                "==============");
-
+            ChatUtil.sendMessage(build_player.getPlayer(), "==============" + "\n" +
+                    "あなたが建築する人に選ばれました。 次のものを建築してください。\n" +
+                    "・" + now_build.name() + "\n" +
+                    "==============");
+        }
     }
 
     public int getTime() {
