@@ -23,13 +23,8 @@ public class GameManager {
     //ゲーム
     private BukkitTask task; //ゲームタスク
     private GameStatus status; //ゲームの状態
-    private int MAX_BUILD_TIME;
     private int build_time; //建築する残り時間
     private int count_time; //カウント時間
-
-    //ボスバー
-    private double MAX_BOSSBAR;
-    private BossBar bossBar;
 
     //建築物
     private BuildManager.Build now_build; //現在の建築物
@@ -41,13 +36,10 @@ public class GameManager {
 
     private GameManager() throws IOException {
         this.count_time = 10;
-        this.MAX_BUILD_TIME = 60*5;
         this.build_time = 60*5;
         this.build_player_list = new ArrayList<>();
         this.build_list = new ArrayList<>(BuildManager.getInstance().getBuildList());
         this.status = GameStatus.WAIITNG;
-        this.bossBar = Bukkit.createBossBar("残り時間", BarColor.BLUE, BarStyle.SEGMENTED_6);
-        this.MAX_BOSSBAR = bossBar.getProgress();
     }
 
     public int startGame() {
@@ -78,12 +70,8 @@ public class GameManager {
                     else if (status == GameStatus.RUNNING) {
 
                         for (Player online : Bukkit.getOnlinePlayers()) {
-                            if (!bossBar.getPlayers().contains(online)) {
-                                bossBar.addPlayer(online);
-                            }
+
                         }
-                        bossBar.setProgress(MAX_BOSSBAR * ((double) build_time / MAX_BUILD_TIME));
-                        bossBar.setTitle("残り時間：" + build_time);
 
                         if (build_time == 300) {
                             ChatUtil.sendGlobalMessage("=== ヒント!! ===" + "\n" +
