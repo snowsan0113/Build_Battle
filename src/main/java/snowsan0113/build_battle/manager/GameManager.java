@@ -60,6 +60,7 @@ public class GameManager {
                             ChatUtil.sendGlobalMessage("ゲーム開始!");
                             build_player_list.addAll(Bukkit.getOnlinePlayers());
                             nextGame();
+                            ScoreboardManager.setScoreboard(GameStatus.RUNNING);
                             status = GameStatus.RUNNING;
                         }
                         else {
