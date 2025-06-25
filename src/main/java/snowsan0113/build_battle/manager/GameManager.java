@@ -1,5 +1,7 @@
 package snowsan0113.build_battle.manager;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -70,20 +72,21 @@ public class GameManager {
                     else if (status == GameStatus.RUNNING) {
 
                         for (Player online : Bukkit.getOnlinePlayers()) {
-
-                        }
-
-                        if (build_time == 300) {
-                            ChatUtil.sendGlobalMessage("=== ヒント!! ===" + "\n" +
-                                    "難しさは" + ChatColor.YELLOW + now_build.difficulty());
-                        }
-                        if (build_time == 200) {
-                            ChatUtil.sendGlobalMessage("=== ヒント!! ===" + "\n" +
-                                    "ジャンルは" + ChatColor.YELLOW + now_build.genre());
-                        }
-                        if (build_time == 100) {
-                            ChatUtil.sendGlobalMessage("=== ヒント!! ===" + "\n" +
-                                    "ヒントは" + ChatColor.YELLOW + now_build.hint());
+                            if (build_time <= 300) {
+                                online.spigot().sendMessage(ChatMessageType.ACTION_BAR,  new TextComponent("難しさ：" + now_build.difficulty()));
+                                if (build_time == 300) ChatUtil.sendGlobalMessage("=== ヒント!! ===" + "\n" +
+                                        "難しさは" + ChatColor.YELLOW + now_build.difficulty());
+                            }
+                            if (build_time <= 200) {
+                                online.spigot().sendMessage(ChatMessageType.ACTION_BAR,  new TextComponent("難しさ：" + now_build.difficulty() + ",ジャンル: " + now_build.genre()));
+                                if (build_time == 200) ChatUtil.sendGlobalMessage("=== ヒント!! ===" + "\n" +
+                                        "ジャンルは" + ChatColor.YELLOW + now_build.genre());
+                            }
+                            if (build_time <= 100) {
+                                online.spigot().sendMessage(ChatMessageType.ACTION_BAR,  new TextComponent("難しさ：" + now_build.difficulty() + ",ジャンル: " + now_build.genre() + ",ヒント：" + now_build.hint()));
+                                if (build_time == 100) ChatUtil.sendGlobalMessage("=== ヒント!! ===" + "\n" +
+                                        "ヒントは" + ChatColor.YELLOW + now_build.hint());
+                            }
                         }
 
                         if (build_time == 0) {
