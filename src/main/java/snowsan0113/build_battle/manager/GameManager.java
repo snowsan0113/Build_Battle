@@ -137,15 +137,27 @@ public class GameManager {
         this.build_time = build_time;
     }
 
+    public BuildManager.Build getBuild() {
+        return now_build;
+    }
+
+    public OfflinePlayer getBuildPlayer() {
+        return build_player;
+    }
+
+    public GameStatus getStatus() {
+        return status;
+    }
+
+    public List<BuildManager.Build> getBuildList() {
+        return build_list;
+    }
+
     public static GameManager getInstance() throws IOException {
         if (instance == null) {
             instance = new GameManager();
         }
         return instance;
-    }
-
-    public List<BuildManager.Build> getBuild_list() {
-        return build_list;
     }
 
     public enum GameStatus {
