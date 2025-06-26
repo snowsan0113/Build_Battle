@@ -13,10 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import snowsan0113.build_battle.BuildBattle;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class ScoreboardManager {
 
@@ -28,6 +25,7 @@ public class ScoreboardManager {
     private final Scoreboard scoreboard;
     private final Objective objective;
     private BukkitTask task;
+    private Map<Integer, Score> score_map = new HashMap<>();
 
     private ScoreboardManager(UUID uuid) throws IOException {
         this.manager = GameManager.getInstance();
@@ -35,6 +33,7 @@ public class ScoreboardManager {
         Scoreboard new_scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         this.objective = new_scoreboard.registerNewObjective("BuildBattle", "dummy", "BuildBattle");
         this.scoreboard = this.objective.getScoreboard();
+        this.score_map = new HashMap<>();
 
         board_map.put(uuid, this);
     }
@@ -45,6 +44,14 @@ public class ScoreboardManager {
         }
 
         return board_map.get(uuid);
+    }
+
+    public Score getScore(int score) {
+        if (!score_map.containsKey(score)) {
+            score_map.put(score, new Score(getObjective(), null, score));
+        }
+
+        return score_map.get(score);
     }
 
     public void setScoreboard() {
@@ -90,47 +97,17 @@ public class ScoreboardManager {
     private void updateScoreboard() {
         if (task == null) {
             this.task = new BukkitRunnable() {
-                String time = null;
-                String build_player_name = null;
-                String now_player_size = null;
-                String point;
                 @Override
                 public void run() {
-                    UUID uuid = player.getUniqueId();
                     if (manager.getStatus() == GameManager.GameStatus.RUNNING) {
                         Player build_player = manager.getBuildPlayer().getPlayer();
 
-                        //残り時間
-                        if (time != null) {
-                            scoreboard.resetScores(time);
-                        }
-                        time = (ChatColor.GOLD + "残り時間： " + (manager.getTime() / 60) + "分" + (manager.getTime() % 60) + "秒");
-                        objective.getScore(time).setScore(28);
-
-                        //ポイント
-                        if (point != null) {
-                            scoreboard.resetScores(point);
-                        }
-                        point = (ChatColor.GOLD + "現在のポイント： " + "未実装");
-                        objective.getScore(point).setScore(24);
-
-
-                        if (build_player != null) {
-                            //建築中のプレイヤー
-                            if (build_player_name != null) {
-                                scoreboard.resetScores(build_player_name);
-                            }
-                            build_player_name = (build_player.getName());
-                            objective.getScore(build_player_name).setScore(25);
-                        }
+                        getScore(28).updateScore(ChatColor.GOLD + "残り時間： " + (manager.getTime() / 60) + "分" + (manager.getTime() % 60) + "秒");
+                        getScore(24).updateScore(ChatColor.GOLD + "現在のポイント： " + "未実装");
+                        if (build_player != null) getScore(25).updateScore(build_player.getName());
                     }
                     else if (manager.getStatus() == GameManager.GameStatus.WAIITNG || manager.getStatus() == GameManager.GameStatus.CONNTING) {
-                        //現在のプレイヤー
-                        if (now_player_size != null) {
-                            scoreboard.resetScores(now_player_size);
-                        }
-                        now_player_size = (ChatColor.GOLD + "現在の人数：" + Bukkit.getOnlinePlayers().size());
-                        objective.getScore(now_player_size).setScore(26);
+                        getScore(26).updateScore(ChatColor.GOLD + "現在の人数：" + Bukkit.getOnlinePlayers().size());
                     }
 
                     //スコアボードセット
@@ -171,6 +148,42 @@ public class ScoreboardManager {
 
     public GameManager getManager() {
         return manager;
+    }
+
+    public static class Score {
+        private String name = null;
+        private final int score;
+        private final Objective objective;
+
+        public Score(Objective objective, String name, int score) {
+            this.name = name;
+            this.score = score;
+            this.objective = objective;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public int getScore() {
+            return score;
+        }
+
+        public Objective getObjective() {
+            return objective;
+        }
+
+        public void updateScore(String name) {
+            if (this.name != null) {
+                objective.getScore(this.name).resetScore();
+            }
+            this.name = name;
+            objective.getScore(name).setScore(score);
+        }
     }
 
 }
