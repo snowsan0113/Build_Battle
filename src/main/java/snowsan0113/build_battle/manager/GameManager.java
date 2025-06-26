@@ -2,17 +2,18 @@ package snowsan0113.build_battle.manager;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.Nullable;
 import snowsan0113.build_battle.BuildBattle;
 import snowsan0113.build_battle.util.ChatUtil;
+import snowsan0113.build_battle.util.ConfigPath;
 
 import java.io.IOException;
 import java.util.*;
@@ -22,11 +23,16 @@ public class GameManager {
     //インスタンス
     private static GameManager instance;
 
+    //プラグイン
+    private BuildBattle plugin;
+    private FileConfiguration config;
+
     //ゲーム
     private BukkitTask task; //ゲームタスク
     private GameStatus status; //ゲームの状態
     private int build_time; //建築する残り時間
     private int count_time; //カウント時間
+    private World world; //ゲームのワールド
 
     //建築物
     private BuildManager.Build now_build; //現在の建築物
@@ -37,8 +43,17 @@ public class GameManager {
     private List<OfflinePlayer> build_player_list; //建築予定のプレイヤー
 
     private GameManager() throws IOException {
-        this.count_time = 10;
-        this.build_time = 10;
+        //プラグイン
+        this.plugin = BuildBattle.getPlugin(BuildBattle.class);
+        this.config = plugin.getConfig();
+
+        //configからの設定
+        String world_name = config.getString(ConfigPath.WORLD_NAME.getPath());
+        this.world = Bukkit.getWorld(world_name);
+        this.count_time = config.getInt(ConfigPath.COUNT_TIME.getPath());
+        this.build_time = config.getInt(ConfigPath.BUILD_TIME.getPath());
+
+        //ゲーム設定
         this.build_player_list = new ArrayList<>();
         this.build_list = new ArrayList<>(BuildManager.getInstance().getBuildList());
         this.status = GameStatus.WAIITNG;
@@ -93,15 +108,20 @@ public class GameManager {
                             }
                         }
 
-                        if (build_time == 0) {
+                        if (build_time <= 0) {
+                            if (build_time == 0) ChatUtil.sendGlobalMessage("==============" + "\n" +
+                                    "時間切れです!　正解は" + now_build.name() + "でした。" + "\n" +
+                                    "次のゲームまでしばらくお待ちください" + "\n" +
+                                    "==============");
                             try {
                                 nextGame();
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
                         }
-
-                        build_time--;
+                        else {
+                            build_time--;
+                        }
                     }
                 }
             }.runTaskTimer(BuildBattle.getPlugin(BuildBattle.class), 0L, 20L);
@@ -123,19 +143,40 @@ public class GameManager {
     }
 
     public void nextGame() throws IOException {
-        //建築する人を選ぶ
         if (build_player_list.isEmpty()) {
+            Location lobby_loc = LocationManager.getLocation(world, ConfigPath.LOBBY);
+
             for (Player online : Bukkit.getOnlinePlayers()) {
                 ScoreboardManager board = ScoreboardManager.getInstance(online.getUniqueId());
                 board.setScoreboard();
+                online.setGameMode(GameMode.ADVENTURE);
+                online.teleport(lobby_loc);
             }
             ChatUtil.sendGlobalMessage("ゲーム終了!");
             resetGame(false);
         }
         else {
+            build_time = config.getInt(ConfigPath.BUILD_TIME.getPath());
+
+            //建築してた人をロビーに戻す
+            if (build_player != null) {
+                Location lobby_loc = LocationManager.getLocation(world, ConfigPath.LOBBY);
+                if (build_player.isOnline()) build_player.getPlayer().teleport(lobby_loc);
+            }
+
+            //エリアを空気にする
+            Location arena_start_loc = LocationManager.getLocation(world, ConfigPath.ARENA_START);
+            Location arena_start_end = LocationManager.getLocation(world, ConfigPath.ARENA_END);
+            LocationManager.fill(Bukkit.createBlockData(Material.AIR), arena_start_loc, arena_start_end);
+
+            //建築する人を選ぶ
             Collections.shuffle(build_player_list);
             build_player = build_player_list.get(0);
             build_player_list.remove(build_player);
+
+            //建築する人をテレポート
+            Location build_spawn_loc = LocationManager.getLocation(world, ConfigPath.BUILD_SPAWN);
+            build_player.getPlayer().teleport(build_spawn_loc);
 
             //建築物を選ぶ
             Collections.shuffle(build_list);
@@ -146,6 +187,19 @@ public class GameManager {
                     "あなたが建築する人に選ばれました。 次のものを建築してください。\n" +
                     "・" + now_build.name() + "\n" +
                     "==============");
+        }
+    }
+
+    public World getWorld() {
+        return world;
+    }
+
+    public void setWorld(World world) {
+        if (status != GameStatus.RUNNING) {
+            this.world = world;
+        }
+        else {
+            throw new IllegalStateException("ゲーム実行中はワールドを変更することはできません。");
         }
     }
 

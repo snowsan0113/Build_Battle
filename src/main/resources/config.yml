@@ -1,0 +1,24 @@
+#ゲームに関する設定
+game:
+  count_time: 10
+  build_time: 300
+
+#場所に関する設定
+location:
+  world_name: "world"
+  lobby:
+    x:
+    y:
+    z:
+  build_spawn:
+    x:
+    y:
+    z:
+  arena_start:
+    x:
+    y:
+    z:
+  arena_end:
+    x:
+    y:
+    z:

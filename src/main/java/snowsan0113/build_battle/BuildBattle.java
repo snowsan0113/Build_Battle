@@ -25,7 +25,7 @@ public class BuildBattle extends JavaPlugin {
             }
         }
 
-
+        saveDefaultConfig();
         getLogger().info("プラグインが有効になりました。");
     }
 
