@@ -240,7 +240,7 @@ public class GameManager {
             return Collections.unmodifiableList(build_end_player_list);
         }
         else {
-            return Collections.unmodifiableList(build_player_list);
+            return build_player_list;
         }
     }
 

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import snowsan0113.build_battle.commands.BuildCommand;
 import snowsan0113.build_battle.commands.GameStartCommand;
 import snowsan0113.build_battle.listener.PlayerChatListener;
+import snowsan0113.build_battle.listener.PlayerJoinLeaveListener;
 import snowsan0113.build_battle.manager.GameManager;
 import snowsan0113.build_battle.manager.ScoreboardManager;
 
@@ -23,6 +24,7 @@ public class BuildBattle extends JavaPlugin {
         getCommand("buildbattle_build").setExecutor(new BuildCommand());
 
         plm.registerEvents(new PlayerChatListener(), this);
+        plm.registerEvents(new PlayerJoinLeaveListener(), this);
 
         for (Player online : Bukkit.getOnlinePlayers()) {
             try {
