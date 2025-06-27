@@ -10,3 +10,6 @@ commands:
   buildbattle_build:
     description: 建築物に関するコマンド
     permission: buildbattle.commands.build
+  buildbattle_youtube:
+    description: Youtubeに関するコマンド
+    permission: buildbattle.commands.youtube

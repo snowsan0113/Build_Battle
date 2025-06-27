@@ -7,6 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import snowsan0113.build_battle.commands.BuildCommand;
 import snowsan0113.build_battle.commands.GameStartCommand;
+import snowsan0113.build_battle.commands.YoutubeCommand;
 import snowsan0113.build_battle.listener.PlayerChatListener;
 import snowsan0113.build_battle.listener.PlayerJoinLeaveListener;
 import snowsan0113.build_battle.manager.GameManager;
@@ -22,6 +23,7 @@ public class BuildBattle extends JavaPlugin {
 
         getCommand("buildbattle_start").setExecutor(new GameStartCommand());
         getCommand("buildbattle_build").setExecutor(new BuildCommand());
+        getCommand("buildbattle_youtube").setExecutor(new YoutubeCommand());
 
         plm.registerEvents(new PlayerChatListener(), this);
         plm.registerEvents(new PlayerJoinLeaveListener(), this);

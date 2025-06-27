@@ -3,6 +3,13 @@ game:
   count_time: 10
   build_time: 300
 
+#Youtubeに関する設定
+youtube:
+  get_youtube: false   #Youtubeから取得を有効する場合はtrue、無効はfalse
+  auto_get: false   #Youtubeからの自動取得。
+  get_time: 3   #Youtubeからの取得頻度。秒数単位で指定してください。
+  api_key: ""
+
 #場所に関する設定
 location:
   world_name: "world"
