@@ -40,7 +40,8 @@ public class GameManager {
 
     //建築プレイヤー
     private OfflinePlayer build_player; //建築しているプレイヤー
-    private List<OfflinePlayer> build_player_list; //建築予定のプレイヤー
+    private final List<OfflinePlayer> build_player_list; //建築予定のプレイヤー
+    private final List<OfflinePlayer> build_end_player_list; //建築が終了したプレイヤー
 
     private GameManager() throws IOException {
         //プラグイン
@@ -55,6 +56,7 @@ public class GameManager {
 
         //ゲーム設定
         this.build_player_list = new ArrayList<>();
+        this.build_end_player_list = new ArrayList<>();
         this.build_list = new ArrayList<>(BuildManager.getInstance().getBuildList());
         this.status = GameStatus.WAIITNG;
     }
@@ -158,10 +160,11 @@ public class GameManager {
         else {
             build_time = config.getInt(ConfigPath.BUILD_TIME.getPath());
 
-            //建築してた人をロビーに戻す
+            //建築してた人の処理
             if (build_player != null) {
                 Location lobby_loc = LocationManager.getLocation(world, ConfigPath.LOBBY);
                 if (build_player.isOnline()) build_player.getPlayer().teleport(lobby_loc);
+                build_end_player_list.add(build_player);
             }
 
             //エリアを空気にする
@@ -225,6 +228,20 @@ public class GameManager {
 
     public List<BuildManager.Build> getBuildList() {
         return build_list;
+    }
+
+    /**
+     * ゲームのプレイヤーリストを取得するもの。
+     * @param end_player trueにすることで終了したプレイヤー、falseで待機中のプレイヤー。
+     * @return 変更不可能なプレイヤーリストを返す。
+     */
+    public List<OfflinePlayer> getBuildPlayerList(boolean end_player) {
+        if (end_player) {
+            return Collections.unmodifiableList(build_end_player_list);
+        }
+        else {
+            return Collections.unmodifiableList(build_player_list);
+        }
     }
 
     public static GameManager getInstance() throws IOException {
