@@ -2,7 +2,9 @@ package snowsan0113.build_battle.manager;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.TranslatableComponent;
 import org.bukkit.*;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -22,6 +24,8 @@ public class GameManager {
 
     //インスタンス
     private static GameManager instance;
+    private static BuildManager build_instance;
+    private static Random random;
 
     //プラグイン
     private BuildBattle plugin;
@@ -44,6 +48,10 @@ public class GameManager {
     private final List<OfflinePlayer> build_end_player_list; //建築が終了したプレイヤー
 
     private GameManager() throws IOException {
+        //インスタンス
+        random = new Random();
+        build_instance = BuildManager.getInstance();
+
         //プラグイン
         this.plugin = BuildBattle.getPlugin(BuildBattle.class);
         this.config = plugin.getConfig();
@@ -57,7 +65,7 @@ public class GameManager {
         //ゲーム設定
         this.build_player_list = new ArrayList<>();
         this.build_end_player_list = new ArrayList<>();
-        this.build_list = new ArrayList<>(BuildManager.getInstance().getBuildList());
+        this.build_list = new ArrayList<>(build_instance.getBuildList());
         this.status = GameStatus.WAIITNG;
     }
 
@@ -186,10 +194,36 @@ public class GameManager {
             now_build = build_list.get(0);
             build_list.remove(now_build);
 
-            ChatUtil.sendMessage(build_player.getPlayer(), "==============" + "\n" +
+
+            //ルールを設定
+            HashMap<RuleManager.GameRule, Object> rule_map = new HashMap<>();
+            rule_map.put(RuleManager.GameRule.CAN_PLACE_BLOCK_SIZE, random.nextInt(200));
+            List<Material> block_list = new ArrayList<>(Arrays.stream(Material.values()).filter(Material::isBlock).toList());
+            Collections.shuffle(block_list);
+            rule_map.put(RuleManager.GameRule.CAN_NOT_PLACE_BLOCK_TYPE, block_list.get(0).createBlockData());
+            setRule(rule_map);
+
+            RuleManager rule = RuleManager.getInstance();
+            TranslatableComponent block = new TranslatableComponent(((BlockData) rule.getRule(RuleManager.GameRule.CAN_NOT_PLACE_BLOCK_TYPE)).getMaterial().translationKey());
+
+            TextComponent text = new TextComponent("==============" + "\n" +
                     "あなたが建築する人に選ばれました。 次のものを建築してください。\n" +
                     "・" + now_build.name() + "\n" +
-                    "==============");
+                    "また、以下のルールがあります。破ると失格です。" + "\n" +
+                    "・設置可能ブロック数: " + (Integer) rule.getRule(RuleManager.GameRule.CAN_PLACE_BLOCK_SIZE) + "\n" +
+                    "・設置不可能ブロック: ");
+            text.addExtra(block);
+            Bukkit.spigot().broadcast(text);
+
+        }
+    }
+
+    public void setRule(Map<RuleManager.GameRule, Object> rule_map) {
+        RuleManager rule_manager = RuleManager.getInstance();
+        for (Map.Entry<RuleManager.GameRule, Object> entry : rule_map.entrySet()) {
+            RuleManager.GameRule rule = entry.getKey();
+            Object value = entry.getValue();
+            rule_manager.setRule(rule, value);
         }
     }
 

@@ -41,6 +41,7 @@ public class BuildManager {
             int difficulty = build_json.get("difficulty").getAsInt();
             String genre = build_json.get("genre").getAsString();
             String hint = build_json.get("hint").getAsString();
+            Bukkit.broadcastMessage(new Build(name, difficulty, genre, hint).toString());
             return new Build(name, difficulty, genre, hint);
         }
         return null;
@@ -53,6 +54,7 @@ public class BuildManager {
             Build build = getBuild(keys);
             list.add(build);
         }
+        System.out.println(list.toString());
         return list;
     }
 
